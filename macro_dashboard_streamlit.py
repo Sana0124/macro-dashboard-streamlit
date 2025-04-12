@@ -33,8 +33,10 @@ def get_stock_data(ticker):
         if 'Close' in data.columns and not data['Close'].empty:
             return data['Close']
         else:
+            st.warning(f"No 'Close' price found for {ticker}.")
             return pd.Series(dtype=float)
     except Exception as e:
+        st.warning(f"Failed to fetch data for {ticker}: {e}")
         return pd.Series(dtype=float)
 
 # --- FETCH FRED DATA ---
