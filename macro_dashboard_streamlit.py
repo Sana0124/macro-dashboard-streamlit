@@ -6,7 +6,7 @@ from fredapi import Fred
 import plotly.graph_objs as go
 
 # --- CONFIG ---
-FRED_API_KEY = '4ffd360c061b3be7718aba08508f96dd'  # Replace this with your actual API key
+FRED_API_KEY = "4ffd360c061b3be7718aba08508f96dd"  # Replace this with your actual API key
 fred = Fred(api_key=FRED_API_KEY)
 
 st.set_page_config(page_title="Macro Market Dashboard", layout="wide")
@@ -33,7 +33,8 @@ yield_tickers = {
 # --- FETCH DATA ---
 def get_stock_data(ticker):
     data = yf.download(ticker, start=start_date, end=today)
-    return data['Adj Close']
+    # Use Close price instead of Adj Close to avoid KeyError
+    return data['Close'] if 'Close' in data.columns else data.iloc[:, 0]
 
 # --- FRED ECONOMIC DATA ---
 def get_fred_data(series_id):
@@ -79,4 +80,4 @@ else:
     st.info("ℹ️ Inflation mixed. Wait for next CPI/PPI + Fed signals.")
 
 # --- AUTO REFRESH ---
-st_autorefresh = st.experimental_rerun
+st.experimental_rerun
