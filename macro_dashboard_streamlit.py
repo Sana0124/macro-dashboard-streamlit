@@ -28,23 +28,29 @@ tickers = {
 
 # --- FETCH YFINANCE DATA ---
 def get_stock_data(ticker):
-    data = yf.download(ticker, start=start_date, end=today, auto_adjust=False)
-    if 'Close' in data.columns:
-        return data['Close']
-    else:
+    try:
+        data = yf.download(ticker, start=start_date, end=today, auto_adjust=False)
+        if 'Close' in data.columns and not data['Close'].empty:
+            return data['Close']
+        else:
+            return pd.Series(dtype=float)
+    except Exception as e:
         return pd.Series(dtype=float)
 
 # --- FETCH FRED DATA ---
 def get_latest_fred_value(series):
-    return fred.get_series(series).dropna()[-1]
+    try:
+        return fred.get_series(series).dropna()[-1]
+    except:
+        return None
 
 # --- MACRO DATA ---
-cpi = get_latest_fred_value('CPIAUCSL')
-core_cpi = get_latest_fred_value('CPILFESL')
-ppi = get_latest_fred_value('PPIACO')
-m2 = get_latest_fred_value('M2SL')
-fed_funds = get_latest_fred_value('FEDFUNDS')
-reverse_repo = get_latest_fred_value('RRPONTSYD')
+cpi = get_latest_fred_value('CPIAUCSL') or 0
+core_cpi = get_latest_fred_value('CPILFESL') or 0
+ppi = get_latest_fred_value('PPIACO') or 0
+m2 = get_latest_fred_value('M2SL') or 0
+fed_funds = get_latest_fred_value('FEDFUNDS') or 0
+reverse_repo = get_latest_fred_value('RRPONTSYD') or 0
 
 # --- MARKET DATA ---
 spx = get_stock_data('^GSPC')
@@ -62,11 +68,15 @@ def trend(data):
 st.subheader("🔍 Trend Summary (Past 6 Months)")
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("📊 S&P 500", f"{spx.iloc[-1]:,.0f}" if not spx.empty else "N/A", trend(spx))
-    st.metric("📉 TLT (Bonds)", f"${tlt.iloc[-1]:.2f}" if not tlt.empty else "N/A", trend(tlt))
+    spx_val = f"{spx.iloc[-1]:,.0f}" if not spx.empty else "N/A"
+    st.metric("📊 S&P 500", spx_val, trend(spx))
+    tlt_val = f"${tlt.iloc[-1]:.2f}" if not tlt.empty else "N/A"
+    st.metric("📉 TLT (Bonds)", tlt_val, trend(tlt))
 with col2:
-    st.metric("💵 DXY (USD Index)", f"{dxy.iloc[-1]:.2f}" if not dxy.empty else "N/A", trend(dxy))
-    st.metric("⚠️ VIX", f"{vix.iloc[-1]:.2f}" if not vix.empty else "N/A", trend(vix))
+    dxy_val = f"{dxy.iloc[-1]:.2f}" if not dxy.empty else "N/A"
+    st.metric("💵 DXY (USD Index)", dxy_val, trend(dxy))
+    vix_val = f"{vix.iloc[-1]:.2f}" if not vix.empty else "N/A"
+    st.metric("⚠️ VIX", vix_val, trend(vix))
 with col3:
     st.metric("📊 CPI", f"{cpi:.2f}")
     st.metric("🏦 M2 Supply (T)", f"{m2/1e12:.2f} T")
