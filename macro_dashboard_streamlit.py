@@ -28,8 +28,11 @@ tickers = {
 
 # --- FETCH YFINANCE DATA ---
 def get_stock_data(ticker):
-    data = yf.download(ticker, start=start_date, end=today)
-    return data['Close'] if 'Close' in data.columns else data.iloc[:, -1]
+    data = yf.download(ticker, start=start_date, end=today, auto_adjust=False)
+    if 'Adj Close' in data.columns:
+        return data['Adj Close']
+    else:
+        return data['Close']
 
 # --- FETCH FRED DATA ---
 def get_latest_fred_value(series):
