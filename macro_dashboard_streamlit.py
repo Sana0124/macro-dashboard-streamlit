@@ -29,10 +29,10 @@ tickers = {
 # --- FETCH YFINANCE DATA ---
 def get_stock_data(ticker):
     data = yf.download(ticker, start=start_date, end=today, auto_adjust=False)
-    if 'Adj Close' in data.columns:
-        return data['Adj Close']
-    else:
+    if 'Close' in data.columns:
         return data['Close']
+    else:
+        return pd.Series(dtype=float)
 
 # --- FETCH FRED DATA ---
 def get_latest_fred_value(series):
@@ -53,6 +53,8 @@ dxy = get_stock_data('DX-Y.NYB')
 vix = get_stock_data('^VIX')
 
 def trend(data):
+    if len(data) < 2:
+        return "No Data"
     if data.iloc[-1] > data.iloc[0]: return "📈 Up"
     elif data.iloc[-1] < data.iloc[0]: return "📉 Down"
     else: return "➖ Flat"
@@ -60,11 +62,11 @@ def trend(data):
 st.subheader("🔍 Trend Summary (Past 6 Months)")
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("📊 S&P 500", f"{spx.iloc[-1]:,.0f}", trend(spx))
-    st.metric("📉 TLT (Bonds)", f"${tlt.iloc[-1]:.2f}", trend(tlt))
+    st.metric("📊 S&P 500", f"{spx.iloc[-1]:,.0f}" if not spx.empty else "N/A", trend(spx))
+    st.metric("📉 TLT (Bonds)", f"${tlt.iloc[-1]:.2f}" if not tlt.empty else "N/A", trend(tlt))
 with col2:
-    st.metric("💵 DXY (USD Index)", f"{dxy.iloc[-1]:.2f}", trend(dxy))
-    st.metric("⚠️ VIX", f"{vix.iloc[-1]:.2f}", trend(vix))
+    st.metric("💵 DXY (USD Index)", f"{dxy.iloc[-1]:.2f}" if not dxy.empty else "N/A", trend(dxy))
+    st.metric("⚠️ VIX", f"{vix.iloc[-1]:.2f}" if not vix.empty else "N/A", trend(vix))
 with col3:
     st.metric("📊 CPI", f"{cpi:.2f}")
     st.metric("🏦 M2 Supply (T)", f"{m2/1e12:.2f} T")
@@ -84,7 +86,7 @@ if fed_funds > 4 and reverse_repo > 50:
 else:
     st.success("🟢 Liquidity improving — Fed may soften tone if inflation continues easing.")
 
-if tlt.iloc[-1] > tlt.mean():
+if not tlt.empty and tlt.iloc[-1] > tlt.mean():
     st.info("📉 Bonds are gaining — investors seeking safety. Monitor yield compression.")
 
 st.markdown("---")
