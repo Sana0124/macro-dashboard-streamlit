@@ -20,13 +20,12 @@ tickers = {
     'S&P 500 (SPX)': '^GSPC',
     'US Dollar Index (DXY)': 'DX-Y.NYB',
     'VIX (Volatility Index)': '^VIX',
-    '20Y Treasury Bond ETF (TLT)': 'TLT',
-    '10Y Yield': '^TNX',
-    '2Y Yield': '^IRX',
-    '30Y Yield': '^TYX'
+    '20Y Treasury Bond ETF (TLT)': 'TLT'
+    # Add more tickers as needed
 }
 
 # --- FETCH YFINANCE DATA ---
+@st.cache_data
 def get_stock_data(ticker):
     try:
         data = yf.download(ticker, start=start_date, end=today, auto_adjust=False)
@@ -40,10 +39,12 @@ def get_stock_data(ticker):
         return pd.Series(dtype=float)
 
 # --- FETCH FRED DATA ---
+@st.cache_data
 def get_latest_fred_value(series):
     try:
         return fred.get_series(series).dropna().iloc[-1]
-    except:
+    except Exception as e:
+        st.warning(f"Failed to fetch FRED data for {series}: {e}")
         return None
 
 # --- MACRO DATA ---
@@ -60,13 +61,15 @@ tlt = get_stock_data('TLT')
 dxy = get_stock_data('DX-Y.NYB')
 vix = get_stock_data('^VIX')
 
+# --- TREND FUNCTION ---
 def trend(data):
-    if len(data) < 2:
+    if data.empty or len(data) < 2:
         return "No Data"
     if data.iloc[-1] > data.iloc[0]: return "📈 Up"
     elif data.iloc[-1] < data.iloc[0]: return "📉 Down"
     else: return "➖ Flat"
 
+# --- TREND SUMMARY ---
 st.subheader("🔍 Trend Summary (Past 6 Months)")
 col1, col2, col3 = st.columns(3)
 with col1:
