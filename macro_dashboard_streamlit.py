@@ -42,7 +42,7 @@ def get_stock_data(ticker):
 # --- FETCH FRED DATA ---
 def get_latest_fred_value(series):
     try:
-        return fred.get_series(series).dropna()[-1]
+        return fred.get_series(series).dropna().iloc[-1]
     except:
         return None
 
